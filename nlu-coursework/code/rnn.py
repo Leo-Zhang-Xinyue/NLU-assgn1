@@ -21,7 +21,7 @@ class RNN(object):
     This class implements Recurrent Neural Networks.
 
     You should implement code in the following functions:
-        predict				->	predict an output sequence for a given input sequence
+        predict	ii			->	predict an output sequence for a given input sequence
         acc_deltas			->	accumulate update weights for the RNNs weight matrices, standard Back Propagation
         acc_deltas_bptt		->	accumulate update weights for the RNNs weight matrices, using Back Propagation Through Time
         acc_deltas_np		->	accumulate update weights for the RNNs weight matrices, standard Back Propagation -- for number predictions
@@ -597,63 +597,64 @@ class RNN(object):
 
         return best_loss
 
-# if __name__ == "__main__":
-#
-#     mode = sys.argv[1].lower()
-#     data_folder = sys.argv[2]
-#     np.random.seed(2018)
-#
-#     if mode == "train-lm":
-#         '''
-#         code for training language model.
-#         change this to different values, or use it to get you started with your own testing class
-#         '''
-#         train_size = 1000
-#         dev_size = 1000
-#         vocab_size = 2000
-#
-#         hdim = int(sys.argv[3])
-#         lookback = int(sys.argv[4])
-#         lr = float(sys.argv[5])
-#
-#         # get the data set vocabulary
-#         vocab = pd.read_table(data_folder + "/vocab.wiki.txt", header=None, sep="\s+", index_col=0,
-#                               names=['count', 'freq'], )
-#         num_to_word = dict(enumerate(vocab.index[:vocab_size]))
-#         word_to_num = invert_dict(num_to_word)
-#
-#         # calculate loss vocabulary words due to vocab_size
-#         fraction_lost = fraq_loss(vocab, word_to_num, vocab_size)
-#         print(
-#             "Retained %d words from %d (%.02f%% of all tokens)\n" % (vocab_size, len(vocab), 100 * (1 - fraction_lost)))
-#
-#         docs = load_lm_dataset(data_folder + '/wiki-train.txt')
-#         S_train = docs_to_indices(docs, word_to_num, 1, 1)
-#         X_train, D_train = seqs_to_lmXY(S_train)
-#
-#         # Load the dev set (for tuning hyperparameters)
-#         docs = load_lm_dataset(data_folder + '/wiki-dev.txt')
-#         S_dev = docs_to_indices(docs, word_to_num, 1, 1)
-#         X_dev, D_dev = seqs_to_lmXY(S_dev)
-#
-#         X_train = X_train[:train_size]
-#         D_train = D_train[:train_size]
-#         X_dev = X_dev[:dev_size]
-#         D_dev = D_dev[:dev_size]
-#
-#         # q = best unigram frequency from omitted vocab
-#         # this is the best expected loss out of that set
-#         q = vocab.freq[vocab_size] / sum(vocab.freq[vocab_size:])
-#
-#         ##########################
-#         # --- your code here --- #
-#         ##########################
-#
-#     run_loss = -1
-#     adjusted_loss = -1
-#
-#     print("Unadjusted: %.03f" % np.exp(run_loss))
-#     print("Adjusted for missing vocab: %.03f" % np.exp(adjusted_loss))
+if __name__ == "__main__":
+    print(sys.argv)
+    mode = sys.argv[1].lower()
+    data_folder = sys.argv[2]
+    np.random.seed(2018)
+
+    if mode == "train-lm":
+        '''
+        code for training language model.
+        change this to different values, or use it to get you started with your own testing class
+        '''
+        train_size = 25000
+        dev_size = 1000
+        vocab_size = 2000
+
+        hdim = int(sys.argv[3])
+        lookback = int(sys.argv[4])
+        lr = float(sys.argv[5])
+
+        # get the data set vocabulary
+        vocab = pd.read_table(data_folder + "/vocab.wiki.txt", header=None, sep="\s+", index_col=0,
+                              names=['count', 'freq'], )
+        num_to_word = dict(enumerate(vocab.index[:vocab_size]))
+        word_to_num = invert_dict(num_to_word)
+
+        # calculate loss vocabulary words due to vocab_size
+        fraction_lost = fraq_loss(vocab, word_to_num, vocab_size)
+        print(
+            "Retained %d words from %d (%.02f%% of all tokens)\n" % (vocab_size, len(vocab), 100 * (1 - fraction_lost)))
+
+        docs = load_lm_dataset(data_folder + '/wiki-train.txt')
+        S_train = docs_to_indices(docs, word_to_num, 1, 1)
+        X_train, D_train = seqs_to_lmXY(S_train)
+
+        # Load the dev set (for tuning hyperparameters)
+        docs = load_lm_dataset(data_folder + '/wiki-dev.txt')
+        S_dev = docs_to_indices(docs, word_to_num, 1, 1)
+        X_dev, D_dev = seqs_to_lmXY(S_dev)
+
+        X_train = X_train[:train_size]
+        D_train = D_train[:train_size]
+        X_dev = X_dev[:dev_size]
+        D_dev = D_dev[:dev_size]
+
+        # q = best unigram frequency from omitted vocab
+        # this is the best expected loss out of that set
+        q = vocab.freq[vocab_size] / sum(vocab.freq[vocab_size:])
+
+        r = RNN(vocab_size, hdim, vocab_size)
+        best_loss = r.train(X_train, D_train, X_dev, D_dev, learning_rate = lr, back_steps = lookback)
+        np.save('rnn.U',r.U)
+        np.save('rnn.V',r.V)
+        np.save('rnn.W',r.W)
+    run_loss = -1
+    adjusted_loss = -1
+
+    print("Unadjusted: %.03f" % np.exp(run_loss))
+    print("Adjusted for missing vocab: %.03f" % np.exp(adjusted_loss))
 #
 # if mode == "train-np":
 #     '''
