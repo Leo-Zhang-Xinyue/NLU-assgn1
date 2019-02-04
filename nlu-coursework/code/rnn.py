@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sat Jan 26 16:15:42 2019
-
 @author: s1717759
 """
 
@@ -19,9 +18,8 @@ from sys import stdout
 class RNN(object):
     '''
     This class implements Recurrent Neural Networks.
-
     You should implement code in the following functions:
-        predict	ii			->	predict an output sequence for a given input sequence
+        predict				->	predict an output sequence for a given input sequence
         acc_deltas			->	accumulate update weights for the RNNs weight matrices, standard Back Propagation
         acc_deltas_bptt		->	accumulate update weights for the RNNs weight matrices, using Back Propagation Through Time
         acc_deltas_np		->	accumulate update weights for the RNNs weight matrices, standard Back Propagation -- for number predictions
@@ -29,7 +27,6 @@ class RNN(object):
         compute_loss 		->	compute the (cross entropy) loss between the desired output and predicted output for a given input sequence
         compute_mean_loss	->	compute the average loss over all sequences in a corpus
         generate_sequence	->	use the RNN to generate a new (unseen) sequnce
-
     Do NOT modify any other methods!
     Do NOT change any method signatures!
     '''
@@ -37,9 +34,7 @@ class RNN(object):
     def __init__(self, vocab_size, hidden_dims, out_vocab_size):
         '''
         initialize the RNN with random weight matrices.
-
         DO NOT CHANGE THIS
-
         vocab_size		size of vocabulary that is being used
         hidden_dims		number of hidden units
         out_vocab_size	size of the output vocabulary
@@ -61,9 +56,7 @@ class RNN(object):
     def apply_deltas(self, learning_rate):
         '''
         update the RNN's weight matrices with corrections accumulated over some training instances
-
         DO NOT CHANGE THIS
-
         learning_rate	scaling factor for update weights
         '''
         # apply updates to U, V, W
@@ -79,13 +72,10 @@ class RNN(object):
     def predict(self, x):
         '''
         predict an output sequence y for a given input sequence x
-
         x	list of words, as indices, e.g.: [0, 4, 2]
-
         returns	y,s
         y	matrix of probability vectors for each input word
         s	matrix of hidden layers for each input word
-
         '''
 
         # matrix s for hidden states, y for output states, given input x.
@@ -105,16 +95,13 @@ class RNN(object):
         '''
         accumulate updates for V, W, U
         standard back propagation
-
         this should not update V, W, U directly. instead, use deltaV, deltaW, deltaU to accumulate updates over time
-
         x	list of words, as indices, e.g.: [0, 4, 2]
         d	list of words, as indices, e.g.: [4, 2, 3]
         y	predicted output layer for x; list of probability vectors, e.g., [[0.3, 0.1, 0.1, 0.5], [0.2, 0.7, 0.05, 0.05] [...]]
             should be part of the return value of predict(x)
         s	predicted hidden layer for x; list of vectors, e.g., [[1.2, -2.3, 5.3, 1.0], [-2.1, -1.1, 0.2, 4.2], [...]]
             should be part of the return value of predict(x)
-
         no return values
         '''
 
@@ -123,38 +110,37 @@ class RNN(object):
             self.deltaW += np.outer(sigout, s[t, :])
             sigin = np.dot(self.W.T, sigout) * (s[t, :] * (1 - s[t, :]))
             self.deltaV += np.outer(sigin, make_onehot(x[t], self.vocab_size))
-            self.deltaU += np.outer(sigin, s[t-1,:])
+            self.deltaU += np.outer(sigin, s[t-1, :])
 
-    # def acc_deltas_np(self, x, d, y, s):
-    # 	'''
-    # 	accumulate updates for V, W, U
-    # 	standard back propagation
-    #
-    # 	this should not update V, W, U directly. instead, use deltaV, deltaW, deltaU to accumulate updates over time
-    # 	for number prediction task, we do binary prediction, 0 or 1
-    #
-    # 	x	list of words, as indices, e.g.: [0, 4, 2]
-    # 	d	array with one element, as indices, e.g.: [0] or [1]
-    # 	y	predicted output layer for x; list of probability vectors, e.g., [[0.3, 0.1, 0.1, 0.5], [0.2, 0.7, 0.05, 0.05] [...]]
-    # 		should be part of the return value of predict(x)
-    # 	s	predicted hidden layer for x; list of vectors, e.g., [[1.2, -2.3, 5.3, 1.0], [-2.1, -1.1, 0.2, 4.2], [...]]
-    # 		should be part of the return value of predict(x)
-    #
-    # 	no return values
-    # 	'''
-    #
-    # 	##########################
-    # 	# --- your code here --- #
-    # 	##########################
+    def acc_deltas_np(self, x, d, y, s):
+        '''
+        accumulate updates for V, W, U
+        standard back propagation
+
+        this should not update V, W, U directly. instead, use deltaV, deltaW, deltaU to accumulate updates over time
+        for number prediction task, we do binary prediction, 0 or 1
+
+        x	list of words, as indices, e.g.: [0, 4, 2]
+        d	array with one element, as indices, e.g.: [0] or [1]
+        y	predicted output layer for x; list of probability vectors, e.g., [[0.3, 0.1, 0.1, 0.5], [0.2, 0.7, 0.05, 0.05] [...]]
+          should be part of the return value of predict(x)
+        s	predicted hidden layer for x; list of vectors, e.g., [[1.2, -2.3, 5.3, 1.0], [-2.1, -1.1, 0.2, 4.2], [...]]
+          should be part of the return value of predict(x)
+
+        no return values
+        '''
+        sigout = make_onehot(d[0],self.vocab_size) - y[-1, :]
+        self.deltaW += np.outer(sigout, s[-2,:])
+        sigin = np.dot(self.W.T, sigout) * (s[-2, :] * (1 - s[-2, :]))
+        self.deltaV += np.outer(sigin, make_onehot(x[-1],self.vocab_size))
+        self.deltaU += np.outer(sigin, s[-3, :])
 
 
     def acc_deltas_bptt(self, x, d, y, s, steps):
         '''
         accumulate updates for V, W, U
         back propagation through time (BPTT)
-
         this should not update V, W, U directly. instead, use deltaV, deltaW, deltaU to accumulate updates over time
-
         x		list of words, as indices, e.g.: [0, 4, 2]
         d		list of words, as indices, e.g.: [4, 2, 3]
         y		predicted output layer for x; list of probability vectors, e.g., [[0.3, 0.1, 0.1, 0.5], [0.2, 0.7, 0.05, 0.05] [...]]
@@ -162,7 +148,6 @@ class RNN(object):
         s		predicted hidden layer for x; list of vectors, e.g., [[1.2, -2.3, 5.3, 1.0], [-2.1, -1.1, 0.2, 4.2], [...]]
             should be part of the return value of predict(x)
         steps	number of time steps to go back in BPTT
-
         no return values
         '''
         for t in reversed(range(len(x))):
@@ -178,40 +163,47 @@ class RNN(object):
 
 
 
-    # def acc_deltas_bptt_np(self, x, d, y, s, steps):
-    # 	'''
-    # 	accumulate updates for V, W, U
-    # 	back propagation through time (BPTT)
-    #
-    # 	this should not update V, W, U directly. instead, use deltaV, deltaW, deltaU to accumulate updates over time
-    # 	for number prediction task, we do binary prediction, 0 or 1
-    #
-    # 	x	list of words, as indices, e.g.: [0, 4, 2]
-    # 	d	array with one element, as indices, e.g.: [0] or [1]
-    # 	y		predicted output layer for x; list of probability vectors, e.g., [[0.3, 0.1, 0.1, 0.5], [0.2, 0.7, 0.05, 0.05] [...]]
-    # 			should be part of the return value of predict(x)
-    # 	s		predicted hidden layer for x; list of vectors, e.g., [[1.2, -2.3, 5.3, 1.0], [-2.1, -1.1, 0.2, 4.2], [...]]
-    # 			should be part of the return value of predict(x)
-    # 	steps	number of time steps to go back in BPTT
-    #
-    # 	no return values
-    # 	'''
-    #
-    # 	##########################
-    # 	# --- your code here --- #
-    # 	##########################
-    #
-    #
+    def acc_deltas_bptt_np(self, x, d, y, s, steps):
+        '''
+        accumulate updates for V, W, U
+        back propagation through time (BPTT)
+
+        this should not update V, W, U directly. instead, use deltaV, deltaW, deltaU to accumulate updates over time
+        for number prediction task, we do binary prediction, 0 or 1
+
+        x	list of words, as indices, e.g.: [0, 4, 2]
+        d	array with one element, as indices, e.g.: [0] or [1]
+        y		predicted output layer for x; list of probability vectors, e.g., [[0.3, 0.1, 0.1, 0.5], [0.2, 0.7, 0.05, 0.05] [...]]
+            should be part of the return value of predict(x)
+        s		predicted hidden layer for x; list of vectors, e.g., [[1.2, -2.3, 5.3, 1.0], [-2.1, -1.1, 0.2, 4.2], [...]]
+            should be part of the return value of predict(x)
+        steps	number of time steps to go back in BPTT
+
+        no return values
+        '''
+        sigout = make_onehot(d[0], self.vocab_size) - y[-1, :]
+        self.deltaW += np.outer(sigout, s[-2, :])
+        sigin = np.dot(self.W.T, sigout) * (s[-2, :] * (1 - s[-2, :]))
+        t = len(x) - 1
+        if t <= steps:
+          steps = t
+        for step in range(steps + 1):
+          self.deltaV += np.outer(sigin, make_onehot(x[t - step], self.vocab_size))
+          self.deltaU += np.outer(sigin, s[t - step - 1, :])
+          sigin = np.dot(self.U.T, sigin) * (s[t - step - 1, :] * (1 - s[t - step - 1, :]))
+
+
+
+
+
+
     def compute_loss(self, x, d):
 
         '''
         compute the loss between predictions y for x, and desired output d.
-
         first predicts the output for x using the RNN, then computes the loss w.r.t. d
-
         x		list of words, as indices, e.g.: [0, 4, 2]
         d		list of words, as indices, e.g.: [4, 2, 3]
-
         return loss		the combined loss for all words
         '''
         y, s = self.predict(x)
@@ -222,68 +214,63 @@ class RNN(object):
         loss = - np.sum(y * D)
         return loss
 
-    # def compute_loss_np(self, x, d):
-    # 	'''
-    # 	compute the loss between predictions y for x, and desired output d.
-    #
-    # 	first predicts the output for x using the RNN, then computes the loss w.r.t. d
-    #
-    # 	x		list of words, as indices, e.g.: [0, 4, 2]
-    # 	d		a word, as indices, e.g.: [0]
-    #
-    # 	return loss		we only take the prediction from the last time step
-    # 	'''
-    #
-    # 	loss = 0.
-    #
-    # 	##########################
-    # 	# --- your code here --- #
-    # 	##########################
-    #
-    # 	return loss
-    #
-    #
-    # def compute_acc_np(self, x, d):
-    # 	'''
-    # 	compute the accuracy prediction, y[t] compared to the desired output d.
-    # 	first predicts the output for x using the RNN, then computes the loss w.r.t. d
-    #
-    # 	x		list of words, as indices, e.g.: [0, 4, 2]
-    # 	d		a word class (plural/singular), as index, e.g.: [0] or [1]
-    #
-    # 	return 1 if argmax(y[t]) == d[0], 0 otherwise
-    # 	'''
-    #
-    #
-    # 	##########################
-    # 	# --- your code here --- #
-    # 	##########################
-    #
-    # 	return 0
-    #
-    #
-    # def compare_num_pred(self, x, d):
-    # 	'''
-    # 	compute the probability between predictions the desired output d[0] and it's (re)inflected form, d[1].
-    # 	first predicts the output for x using the RNN, then compare the probability of d[0] and d[1].
-    #
-    # 	x		list of words, as indices, e.g.: [0, 4, 2]
-    # 	d		the desired verb and its (re)inflected form (singular/plural), as indices, e.g.: [7, 8]
-    #
-    # 	return 1 if p(d[0]) > p(d[1]), 0 otherwise
-    # 	'''
-    #
-    # ##########################
-    # # --- your code here --- #
-    # ##########################
-    #
-    # return 0
+    def compute_loss_np(self, x, d):
+        '''
+        compute the loss between predictions y for x, and desired output d.
+
+        first predicts the output for x using the RNN, then computes the loss w.r.t. d
+
+        x		list of words, as indices, e.g.: [0, 4, 2]
+        d		a word, as indices, e.g.: [0]
+
+        return loss		we only take the prediction from the last time step
+        '''
+
+        loss = 0.
+
+        y, s = self.predict(x)
+
+        loss = - np.sum(np.log(y[-1]) * make_onehot(d[0], self.vocab_size))
+
+        return loss
+
+
+    def compute_acc_np(self, x, d):
+        '''
+        compute the accuracy prediction, y[t] compared to the desired output d.
+        first predicts the output for x using the RNN, then computes the loss w.r.t. d
+
+        x		list of words, as indices, e.g.: [0, 4, 2]
+        d		a word class (plural/singular), as index, e.g.: [0] or [1]
+
+        return 1 if argmax(y[t]) == d[0], 0 otherwise
+        '''
+
+        y, s = self.predict(x)
+        tmp = list(y[-1, :])
+        if tmp.index(max(tmp)) == d[0]:
+          return 1
+        return 0
+
+
+    def compare_num_pred(self, x, d):
+        '''
+        compute the probability between predictions the desired output d[0] and it's (re)inflected form, d[1].
+        first predicts the output for x using the RNN, then compare the probability of d[0] and d[1].
+
+        x		list of words, as indices, e.g.: [0, 4, 2]
+        d		the desired verb and its (re)inflected form (singular/plural), as indices, e.g.: [7, 8]
+
+        return 1 if p(d[0]) > p(d[1]), 0 otherwise
+        '''
+        y, x = self.predict(x) ###x
+        if y[-1, d[0]] > y[-1, d[1]]:
+          return 1
+        return 0
 
     def compute_acc_lmnp(self, X_dev, D_dev):
         '''
-
         DO NOT CHANGE THIS
-
         X_dev			a list of input vectors, e.g., 		[[5, 4, 2], [7, 3, 8]]
         D_dev			a list of pair verb forms (plural/singular), e.g., 	[[4, 9], [6, 5]]
         '''
@@ -294,10 +281,8 @@ class RNN(object):
     def compute_mean_loss(self, X, D):
         '''
         compute the mean loss between predictions for corpus X and desired outputs in corpus D.
-
         X		corpus of sentences x1, x2, x3, [...], each a list of words as indices.
         D		corpus of desired outputs d1, d2, d3 [...], each a list of words as indices.
-
         return mean_loss		average loss over all words in D
         '''
 
@@ -313,13 +298,10 @@ class RNN(object):
               min_change=0.0001, log=True):
         '''
         train the RNN on some training set X, D while optimizing the loss on a dev set X_dev, D_dev
-
         DO NOT CHANGE THIS
-
         training stops after the first of the following is true:
             * number of epochs reached
             * minimum change observed for more than 2 consecutive epochs
-
         X				a list of input vectors, e.g., 		[[0, 4, 2], [1, 3, 0]]
         D				a list of desired outputs, e.g., 	[[4, 2, 3], [3, 0, 3]]
         X_dev			a list of input vectors, e.g., 		[[0, 4, 2], [1, 3, 0]]
@@ -454,13 +436,10 @@ class RNN(object):
                  min_change=0.0001, log=True):
         '''
         train the RNN on some training set X, D while optimizing the loss on a dev set X_dev, D_dev
-
         DO NOT CHANGE THIS
-
         training stops after the first of the following is true:
             * number of epochs reached
             * minimum change observed for more than 2 consecutive epochs
-
         X				a list of input vectors, e.g., 		[[5, 4, 2], [7, 3, 8]]
         D				a list of desired outputs, e.g., 	[[0], [1]]
         X_dev			a list of input vectors, e.g., 		[[5, 4, 2], [7, 3, 8]]
@@ -647,101 +626,98 @@ if __name__ == "__main__":
 
         r = RNN(vocab_size, hdim, vocab_size)
         best_loss = r.train(X_train, D_train, X_dev, D_dev, learning_rate = lr, back_steps = lookback)
-        np.save('rnn.U',r.U)
-        np.save('rnn.V',r.V)
-        np.save('rnn.W',r.W)
+
     run_loss = -1
     adjusted_loss = -1
 
     print("Unadjusted: %.03f" % np.exp(run_loss))
     print("Adjusted for missing vocab: %.03f" % np.exp(adjusted_loss))
-#
-# if mode == "train-np":
-#     '''
-#     starter code for parameter estimation.
-#     change this to different values, or use it to get you started with your own testing class
-#     '''
-#     train_size = 1000
-#     dev_size = 1000
-#     vocab_size = 2000
-#
-#     hdim = int(sys.argv[3])
-#     lookback = int(sys.argv[4])
-#     lr = float(sys.argv[5])
-#
-#     # get the data set vocabulary
-#     vocab = pd.read_table(data_folder + "/vocab.wiki.txt", header=None, sep="\s+", index_col=0,
-#                           names=['count', 'freq'], )
-#     num_to_word = dict(enumerate(vocab.index[:vocab_size]))
-#     word_to_num = invert_dict(num_to_word)
-#
-#     # calculate loss vocabulary words due to vocab_size
-#     fraction_lost = fraq_loss(vocab, word_to_num, vocab_size)
-#     print("Retained %d words from %d (%.02f%% of all tokens)\n" % (vocab_size, len(vocab), 100 * (1 - fraction_lost)))
-#
-#     # load training data
-#     sents = load_np_dataset(data_folder + '/wiki-train.txt')
-#     S_train = docs_to_indices(sents, word_to_num, 0, 0)
-#     X_train, D_train = seqs_to_npXY(S_train)
-#
-#     X_train = X_train[:train_size]
-#     Y_train = D_train[:train_size]
-#
-#     # load development data
-#     sents = load_np_dataset(data_folder + '/wiki-dev.txt')
-#     S_dev = docs_to_indices(sents, word_to_num, 0, 0)
-#     X_dev, D_dev = seqs_to_npXY(S_dev)
-#
-#     X_dev = X_dev[:dev_size]
-#     D_dev = D_dev[:dev_size]
-#
-#     ##########################
-#     # --- your code here --- #
-#     ##########################
-#
-#     acc = 0.
-#
-#     print("Accuracy: %.03f" % acc)
-#
-# if mode == "predict-lm":
-#     data_folder = sys.argv[2]
-#     rnn_folder = sys.argv[3]
-#
-#     # get saved RNN matrices and setup RNN
-#     U, V, W = np.load(rnn_folder + "/rnn.U.npy"), np.load(rnn_folder + "/rnn.V.npy"), np.load(rnn_folder + "/rnn.W.npy")
-#     vocab_size = len(V[0])
-#     hdim = len(U[0])
-#
-#     dev_size = 1000
-#
-#     r = RNN(vocab_size, hdim, vocab_size)
-#     r.U = U
-#     r.V = V
-#     r.W = W
-#
-#     # get vocabulary
-#     vocab = pd.read_table(data_folder + "/vocab.wiki.txt", header=None, sep="\s+", index_col=0,
-#                           names=['count', 'freq'], )
-#     num_to_word = dict(enumerate(vocab.index[:vocab_size]))
-#     word_to_num = invert_dict(num_to_word)
-#
-#     # Load the dev set (for tuning hyperparameters)
-#     docs = load_lm_np_dataset(data_folder + '/wiki-dev.txt')
-#     S_np_dev = docs_to_indices(docs, word_to_num, 1, 0)
-#     X_np_dev, D_np_dev = seqs_to_lmnpXY(S_np_dev)
-#
-#     X_np_dev = X_np_dev[:dev_size]
-#     D_np_dev = D_np_dev[:dev_size]
-#
-#     np_acc = r.compute_acc_lmnp(X_np_dev, D_np_dev)
-#
-#     print('Number prediction accuracy on dev set:', np_acc)
-#
-#     # load test data
-#     sents = load_lm_np_dataset(data_folder + '/wiki-test.txt')
-#     S_np_test = docs_to_indices(sents, word_to_num, 1, 0)
-#     X_np_test, D_np_test = seqs_to_lmnpXY(S_np_test)
-#
-#     np_acc_test = r.compute_acc_lmnp(X_np_test, D_np_test)
-#
-#     print('Number prediction accuracy on test set:', np_acc_test)
+
+    if mode == "train-np":
+        '''
+        starter code for parameter estimation.
+        change this to different values, or use it to get you started with your own testing class
+        '''
+        train_size = 1000
+        dev_size = 1000
+        vocab_size = 2000
+
+        hdim = int(sys.argv[3])
+        lookback = int(sys.argv[4])
+        lr = float(sys.argv[5])
+
+        # get the data set vocabulary
+        vocab = pd.read_table(data_folder + "/vocab.wiki.txt", header=None, sep="\s+", index_col=0,
+                              names=['count', 'freq'], )
+        num_to_word = dict(enumerate(vocab.index[:vocab_size]))
+        word_to_num = invert_dict(num_to_word)
+
+        # calculate loss vocabulary words due to vocab_size
+        fraction_lost = fraq_loss(vocab, word_to_num, vocab_size)
+        print("Retained %d words from %d (%.02f%% of all tokens)\n" % (vocab_size, len(vocab), 100 * (1 - fraction_lost)))
+
+        # load training data
+        sents = load_np_dataset(data_folder + '/wiki-train.txt')
+        S_train = docs_to_indices(sents, word_to_num, 0, 0)
+        X_train, D_train = seqs_to_npXY(S_train)
+
+        X_train = X_train[:train_size]
+        Y_train = D_train[:train_size]
+
+        # load development data
+        sents = load_np_dataset(data_folder + '/wiki-dev.txt')
+        S_dev = docs_to_indices(sents, word_to_num, 0, 0)
+        X_dev, D_dev = seqs_to_npXY(S_dev)
+
+        X_dev = X_dev[:dev_size]
+        D_dev = D_dev[:dev_size]
+
+        r = RNN(vocab_size, hdim, vocab_size)
+        best_loss = r.train_np(X_train, D_train, X_dev, D_dev, learning_rate = lr, back_steps = lookback)
+
+        acc = 0.
+
+        print("Accuracy: %.03f" % acc)
+
+    if mode == "predict-lm":
+        data_folder = sys.argv[2]
+        rnn_folder = sys.argv[3]
+
+        # get saved RNN matrices and setup RNN
+        U, V, W = np.load(rnn_folder + "/rnn.U.npy"), np.load(rnn_folder + "/rnn.V.npy"), np.load(rnn_folder + "/rnn.W.npy")
+        vocab_size = len(V[0])
+        hdim = len(U[0])
+
+        dev_size = 1000
+
+        r = RNN(vocab_size, hdim, vocab_size)
+        r.U = U
+        r.V = V
+        r.W = W
+
+        # get vocabulary
+        vocab = pd.read_table(data_folder + "/vocab.wiki.txt", header=None, sep="\s+", index_col=0,
+                              names=['count', 'freq'], )
+        num_to_word = dict(enumerate(vocab.index[:vocab_size]))
+        word_to_num = invert_dict(num_to_word)
+
+        # Load the dev set (for tuning hyperparameters)
+        docs = load_lm_np_dataset(data_folder + '/wiki-dev.txt')
+        S_np_dev = docs_to_indices(docs, word_to_num, 1, 0)
+        X_np_dev, D_np_dev = seqs_to_lmnpXY(S_np_dev)
+
+        X_np_dev = X_np_dev[:dev_size]
+        D_np_dev = D_np_dev[:dev_size]
+
+        np_acc = r.compute_acc_lmnp(X_np_dev, D_np_dev)
+
+        print('Number prediction accuracy on dev set:', np_acc)
+
+        # load test data
+        sents = load_lm_np_dataset(data_folder + '/wiki-test.txt')
+        S_np_test = docs_to_indices(sents, word_to_num, 1, 0)
+        X_np_test, D_np_test = seqs_to_lmnpXY(S_np_test)
+
+        np_acc_test = r.compute_acc_lmnp(X_np_test, D_np_test)
+
+        print('Number prediction accuracy on test set:', np_acc_test)
