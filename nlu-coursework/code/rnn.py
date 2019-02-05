@@ -625,9 +625,10 @@ if __name__ == "__main__":
         q = vocab.freq[vocab_size] / sum(vocab.freq[vocab_size:])
 
         r = RNN(vocab_size, hdim, vocab_size)
-        best_loss = r.train(X_train, D_train, X_dev, D_dev, learning_rate = lr, back_steps = lookback)
+        best_loss = r.train(X_train, D_train, X_dev, D_dev, 
+                            s = 50, learning_rate = lr, back_steps = lookback)
 
-    run_loss = -1
+    run_loss = r.compute_mean_loss(X_dev,D_dev)
     adjusted_loss = -1
 
     print("Unadjusted: %.03f" % np.exp(run_loss))
