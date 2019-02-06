@@ -674,7 +674,7 @@ if __name__ == "__main__":
         D_dev = D_dev[:dev_size]
 
         r = RNN(vocab_size, hdim, 2)
-        best_loss, best_acc= r.train_np(X_train, D_train, X_dev, D_dev, learning_rate = lr, back_steps = lookback)
+        best_loss, best_acc= r.train_np(X_train, D_train, X_dev, D_dev, epochs = 100, learning_rate = lr, back_steps = lookback)
         acc = best_acc
 
         print("Accuracy: %.03f" % acc)
@@ -705,6 +705,7 @@ if __name__ == "__main__":
         docs = load_lm_np_dataset(data_folder + '/wiki-dev.txt')
         S_np_dev = docs_to_indices(docs, word_to_num, 1, 0)
         X_np_dev, D_np_dev = seqs_to_lmnpXY(S_np_dev)
+        print(len(X_np_dev))
 
         X_np_dev = X_np_dev[:dev_size]
         D_np_dev = D_np_dev[:dev_size]
@@ -721,4 +722,104 @@ if __name__ == "__main__":
         np_acc_test = r.compute_acc_lmnp(X_np_test, D_np_test)
 
         print('Number prediction accuracy on test set:', np_acc_test)
+
+    if mode == "distance":
+        data_folder = sys.argv[2]
+        rnn_folder = sys.argv[3]
+
+        # get saved RNN matrices and setup RNN
+        U, V, W = np.load(rnn_folder + "/rnn.U.npy"), np.load(rnn_folder + "/rnn.V.npy"), np.load(rnn_folder + "/rnn.W.npy")
+        vocab_size = len(V[0])
+        hdim = len(U[0])
+
+        # dev_size = 1000
+
+        r = RNN(vocab_size, hdim, vocab_size)
+        r.U = U
+        r.V = V
+        r.W = W
+
+        # get vocabulary
+        vocab = pd.read_table(data_folder + "/vocab.wiki.txt", header=None, sep="\s+", index_col=0,
+                              names=['count', 'freq'], )
+        num_to_word = dict(enumerate(vocab.index[:vocab_size]))
+        word_to_num = invert_dict(num_to_word)
+
+        # Load the dev set (for tuning hyperparameters)
+        docs = load_distance(data_folder + '/wiki-dev.txt')
+        sents = load_distance(data_folder + '/wiki-test.txt')
+        np_acc = []
+        dev_distance = []
+        np_acc_test = []
+        test_distance = []
+        for i in range(15):
+          S_np_dev = docs_to_indices(docs[i], word_to_num, 1, 0)
+          X_np_dev, D_np_dev = seqs_to_lmnpXY(S_np_dev)
+
+          # X_np_dev = X_np_dev[:dev_size]
+          # D_np_dev = D_np_dev[:dev_size]
+
+          np_acc.append(r.compute_acc_lmnp(X_np_dev, D_np_dev))
+          dev_distance.append(len(docs[i]))
+          # load test data
+          S_np_test = docs_to_indices(sents[i], word_to_num, 1, 0)
+          X_np_test, D_np_test = seqs_to_lmnpXY(S_np_test)
+
+          np_acc_test.append(r.compute_acc_lmnp(X_np_test, D_np_test))
+          test_distance.append(len(sents[i]))
+
+        print('Number prediction accuracy on dev set:', np_acc)
+        print('Number prediction accuracy on test set:', np_acc_test)
+        print('Distance on dev set:', dev_distance)
+        print('Distance on test set:', test_distance)
+
+    if mode == "length":
+        data_folder = sys.argv[2]
+        rnn_folder = sys.argv[3]
+
+        # get saved RNN matrices and setup RNN
+        U, V, W = np.load(rnn_folder + "/rnn.U.npy"), np.load(rnn_folder + "/rnn.V.npy"), np.load(rnn_folder + "/rnn.W.npy")
+        vocab_size = len(V[0])
+        hdim = len(U[0])
+
+        # dev_size = 1000
+
+        r = RNN(vocab_size, hdim, vocab_size)
+        r.U = U
+        r.V = V
+        r.W = W
+
+        # get vocabulary
+        vocab = pd.read_table(data_folder + "/vocab.wiki.txt", header=None, sep="\s+", index_col=0,
+                              names=['count', 'freq'], )
+        num_to_word = dict(enumerate(vocab.index[:vocab_size]))
+        word_to_num = invert_dict(num_to_word)
+
+        # Load the dev set (for tuning hyperparameters)
+        docs = load_length(data_folder + '/wiki-dev.txt')
+        sents = load_length(data_folder + '/wiki-test.txt')
+        np_acc = []
+        dev_distance = []
+        np_acc_test = []
+        test_distance = []
+        for i in range(30):
+          S_np_dev = docs_to_indices(docs[i], word_to_num, 1, 0)
+          X_np_dev, D_np_dev = seqs_to_lmnpXY(S_np_dev)
+
+          # X_np_dev = X_np_dev[:dev_size]
+          # D_np_dev = D_np_dev[:dev_size]
+
+          np_acc.append(r.compute_acc_lmnp(X_np_dev, D_np_dev))
+          dev_distance.append(len(docs[i]))
+          # load test data
+          S_np_test = docs_to_indices(sents[i], word_to_num, 1, 0)
+          X_np_test, D_np_test = seqs_to_lmnpXY(S_np_test)
+
+          np_acc_test.append(r.compute_acc_lmnp(X_np_test, D_np_test))
+          test_distance.append(len(sents[i]))
+
+        print('Number prediction accuracy on dev set:', np_acc)
+        print('Number prediction accuracy on test set:', np_acc_test)
+        print('Distance on dev set:', dev_distance)
+        print('Distance on test set:', test_distance)
 

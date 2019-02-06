@@ -40,6 +40,7 @@ def load_np_dataset(fname):
 def load_lm_np_dataset(fname):
     sents = []
     cnt = 0
+    distance = 0
     with open(fname) as f:
         for line in f:
             if cnt == 0:
@@ -52,6 +53,44 @@ def load_lm_np_dataset(fname):
             sent = items[0].split()[:verb_idx] + [verb, inf_verb]
             sents.append(sent)
     return sents
+
+def load_distance(fname):
+    res = [[] for i in range(15)]
+    cnt = 0
+    with open(fname) as f:
+        for line in f:
+            if cnt == 0:
+                cnt += 1
+                continue
+            items = line.strip().split('\t')
+            verb_idx = int(items[2])
+            subj_idx = int(items[1])
+            distance =  verb_idx - subj_idx
+            verb = items[4]
+            inf_verb = items[5]
+            sent = items[0].split()[:verb_idx] + [verb, inf_verb]
+            if distance > 15:
+                continue
+            res[distance-1].append(sent)
+    return res
+
+def load_length(fname):
+    res = [[] for i in range(30)]
+    cnt = 0
+    with open(fname) as f:
+        for line in f:
+            if cnt == 0:
+                cnt += 1
+                continue
+            items = line.strip().split('\t')
+            verb_idx = int(items[2])
+            verb = items[4]
+            inf_verb = items[5]
+            sent = items[0].split()[:verb_idx] + [verb, inf_verb]
+            if verb_idx > 30:
+                continue
+            res[verb_idx-1].append(sent)
+    return res
 
 
 def pad_sequence(seq, left=1, right=1):
