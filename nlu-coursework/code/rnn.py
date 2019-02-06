@@ -106,7 +106,11 @@ class RNN(object):
         '''
 
         for t in reversed(range(len(x))):
+<<<<<<< HEAD
             sigout = make_onehot(d[t], self.vocab_size) - y[t, :]
+=======
+            sigout = make_onehot(d[t], self.out_vocab_size) - y[t, :]
+>>>>>>> 1a8407f0eec682772e8b77ec756cc3d70eb08f4c
             self.deltaW += np.outer(sigout, s[t, :])
             sigin = np.dot(self.W.T, sigout) * (s[t, :] * (1 - s[t, :]))
             self.deltaV += np.outer(sigin, make_onehot(x[t], self.vocab_size))
@@ -129,11 +133,20 @@ class RNN(object):
 
         no return values
         '''
+<<<<<<< HEAD
         sigout = make_onehot(d[0],self.vocab_size) - y[-1, :]
         self.deltaW += np.outer(sigout, s[-2,:])
         sigin = np.dot(self.W.T, sigout) * (s[-2, :] * (1 - s[-2, :]))
         self.deltaV += np.outer(sigin, make_onehot(x[-1],self.vocab_size))
         self.deltaU += np.outer(sigin, s[-3, :])
+=======
+        t = len(x) - 1
+        sigout = make_onehot(d[0],self.out_vocab_size) - y[t, :]
+        self.deltaW += np.outer(sigout, s[t,:])
+        sigin = np.dot(self.W.T, sigout) * (s[t, :] * (1 - s[t, :]))
+        self.deltaV += np.outer(sigin, make_onehot(x[t],self.vocab_size))
+        self.deltaU += np.outer(sigin, s[t - 1, :])
+>>>>>>> 1a8407f0eec682772e8b77ec756cc3d70eb08f4c
 
 
     def acc_deltas_bptt(self, x, d, y, s, steps):
@@ -151,7 +164,11 @@ class RNN(object):
         no return values
         '''
         for t in reversed(range(len(x))):
+<<<<<<< HEAD
             sigout = make_onehot(d[t], self.vocab_size) - y[t, :]
+=======
+            sigout = make_onehot(d[t], self.out_vocab_size) - y[t, :]
+>>>>>>> 1a8407f0eec682772e8b77ec756cc3d70eb08f4c
             self.deltaW += np.outer(sigout, s[t, :])
             sigin = np.dot(self.W.T, sigout) * (s[t, :] * (1 - s[t, :]))
             if t <= steps:
@@ -181,7 +198,11 @@ class RNN(object):
 
         no return values
         '''
+<<<<<<< HEAD
         sigout = make_onehot(d[0], self.vocab_size) - y[-1, :]
+=======
+        sigout = make_onehot(d[0], self.out_vocab_size) - y[-1, :]
+>>>>>>> 1a8407f0eec682772e8b77ec756cc3d70eb08f4c
         self.deltaW += np.outer(sigout, s[-2, :])
         sigin = np.dot(self.W.T, sigout) * (s[-2, :] * (1 - s[-2, :]))
         t = len(x) - 1
@@ -209,7 +230,11 @@ class RNN(object):
         y, s = self.predict(x)
         D = np.zeros((len(x), self.out_vocab_size))
         for t in range(len(x)):
+<<<<<<< HEAD
             D[t, :] = make_onehot(d[t], self.vocab_size)
+=======
+            D[t, :] = make_onehot(d[t], self.out_vocab_size)
+>>>>>>> 1a8407f0eec682772e8b77ec756cc3d70eb08f4c
         y = np.log(y)
         loss = - np.sum(y * D)
         return loss
@@ -230,7 +255,11 @@ class RNN(object):
 
         y, s = self.predict(x)
 
+<<<<<<< HEAD
         loss = - np.sum(np.log(y[-1]) * make_onehot(d[0], self.vocab_size))
+=======
+        loss = - np.sum(np.log(y[-1]) * make_onehot(d[0], self.out_vocab_size))
+>>>>>>> 1a8407f0eec682772e8b77ec756cc3d70eb08f4c
 
         return loss
 
@@ -247,8 +276,12 @@ class RNN(object):
         '''
 
         y, s = self.predict(x)
+<<<<<<< HEAD
         tmp = list(y[-1, :])
         if tmp.index(max(tmp)) == d[0]:
+=======
+        if np.argmax(y[-1,:]) == d[0]:
+>>>>>>> 1a8407f0eec682772e8b77ec756cc3d70eb08f4c
           return 1
         return 0
 
@@ -263,7 +296,11 @@ class RNN(object):
 
         return 1 if p(d[0]) > p(d[1]), 0 otherwise
         '''
+<<<<<<< HEAD
         y, x = self.predict(x) ###x
+=======
+        y, x = self.predict(x)
+>>>>>>> 1a8407f0eec682772e8b77ec756cc3d70eb08f4c
         if y[-1, d[0]] > y[-1, d[1]]:
           return 1
         return 0
@@ -390,6 +427,10 @@ class RNN(object):
                     self.deltaV /= batch_size
                     self.deltaW /= batch_size
                     self.apply_deltas(learning_rate)
+<<<<<<< HEAD
+=======
+            print(self.deltaU, self.deltaV, self.deltaW)
+>>>>>>> 1a8407f0eec682772e8b77ec756cc3d70eb08f4c
 
             if len(X) % batch_size > 0:
                 mod = len(X) % batch_size
@@ -574,7 +615,11 @@ class RNN(object):
         print("setting U, V, W to matrices from best epoch")
         self.U, self.V, self.W = bestU, bestV, bestW
 
+<<<<<<< HEAD
         return best_loss
+=======
+        return best_loss, best_acc
+>>>>>>> 1a8407f0eec682772e8b77ec756cc3d70eb08f4c
 
 if __name__ == "__main__":
     print(sys.argv)
@@ -625,10 +670,16 @@ if __name__ == "__main__":
         q = vocab.freq[vocab_size] / sum(vocab.freq[vocab_size:])
 
         r = RNN(vocab_size, hdim, vocab_size)
+<<<<<<< HEAD
         best_loss = r.train(X_train, D_train, X_dev, D_dev, 
                             s = 50, learning_rate = lr, back_steps = lookback)
 
     run_loss = r.compute_mean_loss(X_dev,D_dev)
+=======
+        best_loss = r.train(X_train, D_train, X_dev, D_dev, learning_rate = lr, back_steps = lookback)
+
+    run_loss = -1
+>>>>>>> 1a8407f0eec682772e8b77ec756cc3d70eb08f4c
     adjusted_loss = -1
 
     print("Unadjusted: %.03f" % np.exp(run_loss))
@@ -673,10 +724,16 @@ if __name__ == "__main__":
         X_dev = X_dev[:dev_size]
         D_dev = D_dev[:dev_size]
 
+<<<<<<< HEAD
         r = RNN(vocab_size, hdim, vocab_size)
         best_loss = r.train_np(X_train, D_train, X_dev, D_dev, learning_rate = lr, back_steps = lookback)
 
         acc = 0.
+=======
+        r = RNN(vocab_size, hdim, 2)
+        best_loss, best_acc= r.train_np(X_train, D_train, X_dev, D_dev, learning_rate = lr, back_steps = lookback)
+        acc = best_acc
+>>>>>>> 1a8407f0eec682772e8b77ec756cc3d70eb08f4c
 
         print("Accuracy: %.03f" % acc)
 
@@ -720,5 +777,11 @@ if __name__ == "__main__":
         X_np_test, D_np_test = seqs_to_lmnpXY(S_np_test)
 
         np_acc_test = r.compute_acc_lmnp(X_np_test, D_np_test)
+<<<<<<< HEAD
 
         print('Number prediction accuracy on test set:', np_acc_test)
+=======
+
+        print('Number prediction accuracy on test set:', np_acc_test)
+
+>>>>>>> 1a8407f0eec682772e8b77ec756cc3d70eb08f4c
